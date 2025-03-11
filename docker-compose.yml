@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  airbyte:
+    image: airbyte/platform:latest
+    container_name: airbyte
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+      - "8002:8002"
+    restart: always
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    restart: always
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  metabase:
+    image: metabase/metabase:latest
+    container_name: metabase
+    ports:
+      - "3000:3000"
+    restart: always
+
+volumes:
+  postgres_data:
