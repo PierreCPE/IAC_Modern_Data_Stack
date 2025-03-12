@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   airbyte:
-    image: airbyte/platform:latest
+    image: airbyte/airbyte-webapp:latest
     container_name: airbyte
     ports:
       - "8000:8000"
