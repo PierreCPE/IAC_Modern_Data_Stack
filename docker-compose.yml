@@ -1,20 +1,45 @@
 services:
-  airbyte:
-    image: airbyte/airbyte-webapp:latest
-    container_name: airbyte
+  airbyte-db:
+    image: airbyte/db:0.50.12
+    container_name: airbyte-db
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: airbyte
     ports:
-      - "8000:8000"
+      - "5433:5432"
+    restart: always
+    volumes:
+      - airbyte_db_data:/var/lib/postgresql/data
+
+  airbyte-server:
+    image: airbyte/server:0.50.12
+    container_name: airbyte-server
+    depends_on:
+      - airbyte-db
+    ports:
       - "8001:8001"
-      - "8002:8002"
     restart: always
 
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: azurite
+  airbyte-worker:
+    image: airbyte/worker:0.50.12
+    container_name: airbyte-worker
+    depends_on:
+      - airbyte-server
+    restart: always
+
+  airbyte-temporal:
+    image: airbyte/temporal:0.50.12
+    container_name: airbyte-temporal
+    restart: always
+
+  airbyte-webapp:
+    image: airbyte/webapp:0.50.12
+    container_name: airbyte-webapp
+    depends_on:
+      - airbyte-server
     ports:
-      - "10000:10000"
-      - "10001:10001"
-      - "10002:10002"
+      - "8000:8000"
     restart: always
 
   postgres:
@@ -30,6 +55,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    restart: always
+
   metabase:
     image: metabase/metabase:latest
     container_name: metabase
@@ -38,4 +72,5 @@ services:
     restart: always
 
 volumes:
+  airbyte_db_data:
   postgres_data:
