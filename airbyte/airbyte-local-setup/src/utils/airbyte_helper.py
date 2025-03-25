@@ -1,10 +1,6 @@
 from azure.storage.blob import BlobServiceClient
+import os
 
-def initialize_airbyte_client(api_url: str, api_key: str):
-    from airbyte_api_client import AirbyteApiClient
-
-    client = AirbyteApiClient(api_url=api_url, api_key=api_key)
-    return client
 
 def create_connection(client, source_id: str, destination_id: str, connection_name: str):
     connection_config = {
@@ -31,11 +27,14 @@ def check_job_status(client, job_id: str):
 def setup_csv_to_adls(client, parquet_path, container_name):
     """Upload a Parquet file to ADLS Gen 2 (Azurite)."""
     # Connection string for Azurite
-    connection_string = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFeq..." \
-                        "azurite-key...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
+    connection_string = ()
 
     # Initialize BlobServiceClient
     blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+    # Lister les containers existants
+    containers = list(blob_service_client.list_containers())
+    print("Containers disponibles:", [container["name"] for container in containers])   
 
     # Create container if it doesn't exist
     container_client = blob_service_client.get_container_client(container_name)

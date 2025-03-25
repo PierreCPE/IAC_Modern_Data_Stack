@@ -5,7 +5,7 @@ This directory contains the setup for running Airbyte locally, along with a pipe
 ## Prerequisites
 
 1. **Docker**: Ensure Docker is installed and running.
-2. **Python**: Install Python 3.8+.
+2. **Python**: Install Python 3.10.
 3. **Java**: Install Java (required for PySpark).
 
    ```bash
@@ -16,13 +16,14 @@ This directory contains the setup for running Airbyte locally, along with a pipe
 4. **Virtual Environment**: Create and activate a virtual environment.
 
    ```bash
-   python3 -m venv .venv
+   python3.10 -m venv .venv
    source .venv/bin/activate
    ```
 
 5. **Install Dependencies**: Install the required Python packages.
 
    ```bash
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
@@ -38,7 +39,7 @@ This directory contains the setup for running Airbyte locally, along with a pipe
 
    Azurite will be available at `http://127.0.0.1:10000`.
 
-2. **Prepare the Input CSV**
+2. **Prepare the Input CSV or Use the mock data from the airbyte librairy**
 
    Place your input CSV file in the `data/` directory. For example, `data/data.csv`.
 
@@ -59,6 +60,8 @@ This directory contains the setup for running Airbyte locally, along with a pipe
    ```bash
    python src/list_blobs.py
    ```
+
+
 
 ## Notes
 
