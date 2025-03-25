@@ -116,3 +116,9 @@ source .venv/bin/activate
 - **Azurite Issues**: Ensure that the Docker container is running and accessible at `http://127.0.0.1:10000`.
 - **PySpark Errors**: Ensure that Java is installed and properly configured on your system.
 - **Missing Dependencies**: Ensure you have installed all required dependencies using the `requirements.txt`.
+
+
+
+## TODO :
+
+Mettre en place la gestion du secret avec var d'environnement, et l'ajouter dans le guide
