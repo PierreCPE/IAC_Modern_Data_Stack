@@ -1,53 +1,115 @@
-# filepath: airbyte-local-setup/README.md
 # Airbyte Local Setup
 
-## Introduction
+This directory contains the setup for running Airbyte locally, along with a pipeline to convert a CSV file to Parquet format using PySpark and upload it to an Azure Data Lake Storage Gen 2 (emulated locally with Azurite).
 
-This project sets up Airbyte locally using the Airbyte Python library instead of Docker Compose. It provides a simple way to manage data ingestion from various sources.
+## Prerequisites
 
-## Project Structure
+1. **Docker**: Ensure Docker is installed and running.
+2. **Python**: Install Python 3.8+.
+3. **Java**: Install Java (required for PySpark).
 
-```
-airbyte-local-setup/
-├── src/
-│   ├── main.py          # Entry point of the application
-│   └── utils/
-│       └── airbyte_helper.py  # Helper functions for Airbyte API interactions
-├── requirements.txt     # Project dependencies
-└── README.md            # Project documentation
-```
-
-## Installation
-
-1. Clone the repository:
    ```bash
-   git clone <URL_GIT>
-   cd airbyte-local-setup
+   sudo apt update
+   sudo apt install default-jre -y
    ```
 
-2. Install the required dependencies:
+4. **Virtual Environment**: Create and activate a virtual environment.
+
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+5. **Install Dependencies**: Install the required Python packages.
+
    ```bash
    pip install -r requirements.txt
    ```
 
-## Usage
+## Steps to Run the Pipeline Locally
 
-To run the application, execute the following command:
+1. **Start Azurite (ADLS Gen 2 Emulator)**
+
+   Use Docker Compose to start Azurite:
+
+   ```bash
+   docker-compose up -d azurite
+   ```
+
+   Azurite will be available at `http://127.0.0.1:10000`.
+
+2. **Prepare the Input CSV**
+
+   Place your input CSV file in the `data/` directory. For example, `data/data.csv`.
+
+3. **Run the Pipeline**
+
+   Execute the `main.py` script to convert the CSV to Parquet and upload it to Azurite:
+
+   ```bash
+   python src/main.py
+   ```
+
+4. **Verify the Upload**
+
+   Use Azure Storage Explorer or the Azurite logs to verify that the Parquet file has been uploaded to the container `my-container`.
+   I also wrote a script to see the list of my blobs inside the ADLS
+   You can run : 
+
+   ```bash
+   python src/list_blobs.py
+   ```
+
+## Notes
+
+- This project uses the `airbyte` library to fetch data from sources. The library automatically installs and configures the required sources. To fetch data, simply configure the source in `main.py` and run the script:
+- The pipeline uses PySpark for data processing and Azure Storage Blob SDK for uploading files to Azurite.
+- Ensure that the `data/` directory exists and contains the input CSV file before running the script.
+- You can modify the container name or file paths in `src/main.py` as needed.
+
+## Troubleshooting
+
+### Problème : "The virtual environment was not created successfully because ensurepip is not available"
+
+Si vous rencontrez cette erreur, cela signifie que le module ensurepip n'est pas disponible dans votre installation Python. Voici comment résoudre ce problème :
+
+1. **Installez le package python3-venv**:
+
+   ```bash
+   sudo apt install python3.12-venv
+   ```
+
+2. **Recréez l'environnement virtuel**:
+
+```bash
+rm -rf .venv
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+3. **Relancez le script**:
+
 ```bash
 python src/main.py
 ```
 
-## Airbyte Setup
+### Problème : "(.venv) (.venv)" dans le terminal
 
-This project utilizes the Airbyte Python client to manage data ingestion. Ensure you have the necessary configurations set up in your `main.py` file to connect to your data sources.
+Cela se produit lorsque vous activez plusieurs fois l'environnement virtuel. Pour résoudre ce problème :
 
-## Contributing
+1. **Désactivez l'environnement virtuel en cours**:
 
-1. Fork the repository
-2. Create a branch (`feature-name`)
-3. Make your changes and commit them
-4. Push to your branch and open a pull request
+```bash
+deactivate
+```
 
-## License
+2. **Réactivez-le une seule fois**:
 
-This project is licensed under the MIT License.
+```bash
+source .venv/bin/activate
+```
+
+- **Azurite Issues**: Ensure that the Docker container is running and accessible at `http://127.0.0.1:10000`.
+- **PySpark Errors**: Ensure that Java is installed and properly configured on your system.
+- **Missing Dependencies**: Ensure you have installed all required dependencies using the `requirements.txt`.

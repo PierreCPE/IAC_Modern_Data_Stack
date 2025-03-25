@@ -1,6 +1,6 @@
-airbyte-local-setup/requirements.txt
-
-airbyte-api-client
+airbyte-lib
 requests
+azure-storage-blob
+pyspark
 pandas
-```
+matplotlib

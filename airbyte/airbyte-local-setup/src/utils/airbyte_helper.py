@@ -1,3 +1,5 @@
+from azure.storage.blob import BlobServiceClient
+
 def initialize_airbyte_client(api_url: str, api_key: str):
     from airbyte_api_client import AirbyteApiClient
 
@@ -26,29 +28,25 @@ def check_job_status(client, job_id: str):
     status = client.get_job_status(job_id)
     return status
 
-def setup_csv_to_adls(client, csv_path, container_name):
-    # Create CSV source
-    source_config = {
-        "name": "Local CSV",
-        "sourceDefinitionId": "22f6c74f-5699-40ff-833c-4a879ea40133",  # CSV source ID
-        "connectionConfiguration": {
-            "url": f"file://{csv_path}",
-            "format": "csv"
-        }
-    }
-    source = client.create_source(source_config)
+def setup_csv_to_adls(client, parquet_path, container_name):
+    """Upload a Parquet file to ADLS Gen 2 (Azurite)."""
+    # Connection string for Azurite
+    connection_string = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFeq..." \
+                        "azurite-key...;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
 
-    # Create ADLS destination
-    destination_config = {
-        "name": "Local ADLS",
-        "destinationDefinitionId": "eb2f5c7e-8e3d-4b79-8c3e-6a7e7b3e5a6b",  # ADLS Gen 2 destination ID
-        "connectionConfiguration": {
-            "storage_account": "devstoreaccount1",
-            "container_name": container_name,
-            "azure_blob_storage_endpoint": "http://127.0.0.1:10000/devstoreaccount1",
-            "azure_blob_storage_sas_token": "?sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2030-01-01T00:00:00Z&st=2020-01-01T00:00:00Z&spr=https&sig=..."
-        }
-    }
-    destination = client.create_destination(destination_config)
+    # Initialize BlobServiceClient
+    blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 
-    return source["sourceId"], destination["destinationId"]
+    # Create container if it doesn't exist
+    container_client = blob_service_client.get_container_client(container_name)
+    if not container_client.exists():
+        container_client.create_container()
+        print(f"Created container: {container_name}")
+
+    # Upload Parquet file
+    blob_name = os.path.basename(parquet_path)
+    blob_client = container_client.get_blob_client(blob_name)
+
+    with open(parquet_path, "rb") as data:
+        blob_client.upload_blob(data, overwrite=True)
+        print(f"Uploaded {parquet_path} to container {container_name} as {blob_name}")
