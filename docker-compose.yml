@@ -1,47 +1,4 @@
 services:
-  airbyte-db:
-    image: airbyte/db:0.50.12
-    container_name: airbyte-db
-    environment:
-      POSTGRES_USER: docker
-      POSTGRES_PASSWORD: docker
-      POSTGRES_DB: airbyte
-    ports:
-      - "5433:5432"
-    restart: always
-    volumes:
-      - airbyte_db_data:/var/lib/postgresql/data
-
-  airbyte-server:
-    image: airbyte/server:0.50.12
-    container_name: airbyte-server
-    depends_on:
-      - airbyte-db
-    ports:
-      - "8001:8001"
-    restart: always
-
-  airbyte-worker:
-    image: airbyte/worker:0.50.12
-    container_name: airbyte-worker
-    depends_on:
-      - airbyte-server
-    restart: always
-
-  airbyte-temporal:
-    image: airbyte/temporal:0.50.12
-    container_name: airbyte-temporal
-    restart: always
-
-  airbyte-webapp:
-    image: airbyte/webapp:0.50.12
-    container_name: airbyte-webapp
-    depends_on:
-      - airbyte-server
-    ports:
-      - "8000:8000"
-    restart: always
-
   postgres:
     image: postgres:latest
     container_name: postgres
