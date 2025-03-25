@@ -1,6 +1,9 @@
 import airbyte_lib as ab
+import os
+from datetime import datetime
 # from utils.airbyte_helper import setup_csv_to_adls
 import matplotlib.pyplot as plt
+
 
 
 def convert_csv_to_parquet_spark(csv_path, parquet_path):
@@ -35,7 +38,7 @@ def main():
     # Problemes d'affchage de l'histogramme : 
 
 
-    
+
     users_df = read_results.streams["users"].to_pandas()
     print(users_df.head())
     
@@ -43,7 +46,20 @@ def main():
     plt.title("Histogram of Ages")
     plt.xlabel("Ages")
     plt.ylabel("frequency")
-    plt.show()
+
+    # Create a dedicated folder for histograms if it doesn't exist
+    output_dir = "histograms"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Generate a timestamped filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"histogram_{timestamp}.png"
+    filepath = os.path.join(output_dir, filename)
+
+    # Save the graph to the dedicated folder
+    plt.savefig(filepath)
+    print(f"Graph saved to {filepath}")
+    
 
     # # Process each stream
     # for name, records in result.streams.items():
