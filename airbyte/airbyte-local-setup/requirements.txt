@@ -1,6 +1,0 @@
-airbyte-lib
-requests
-azure-storage-blob
-pyspark
-pandas
-matplotlib
