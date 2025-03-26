@@ -1,0 +1,9 @@
+airbyte-lib
+requests
+azure-storage-blob
+pyspark
+pandas
+matplotlib
+streamlit
+dbt-snowflake
+snowflake-connector-python

@@ -1,0 +1,14 @@
+snowflake_project:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: YOUR_ACCOUNT
+      user: YOUR_USER
+      password: YOUR_PASSWORD
+      role: YOUR_ROLE
+      database: YOUR_DATABASE
+      warehouse: YOUR_WAREHOUSE
+      schema: YOUR_SCHEMA
+      threads: 4
+      client_session_keep_alive: False

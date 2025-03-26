@@ -1,7 +1,10 @@
 import airbyte_lib as ab
 import os
 from datetime import datetime
-from utils.airbyte_helper import setup_csv_to_adls  # Importer la fonction pour uploader vers ADLS
+
+from storage.ADLS.ADLS_local_setup import airbyte_helper
+
+  # Importer la fonction pour uploader vers ADLS
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -65,7 +68,7 @@ def main():
     # Uploader le fichier Parquet dans ADLS (Azurite)
     container_name = "my-container"
     try:
-        setup_csv_to_adls(None, parquet_filepath, container_name)  # Uploader le fichier vers ADLS
+        airbyte_helper.setup_csv_to_adls(None, parquet_filepath, container_name)  # Uploader le fichier vers ADLS
         print(f"Uploaded {parquet_filename} to ADLS container '{container_name}'")
     except Exception as e:
         print(f"Error uploading {parquet_filename} to ADLS: {e}")
