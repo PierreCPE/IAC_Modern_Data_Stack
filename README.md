@@ -90,7 +90,3 @@ Une fois la version locale validée, nous utiliserons Terraform pour déployer l
 
 MIT License
 
-
-## TODO :
-
-Mettre en place la gestion du secret avec var d'environnement, et l'ajouter dans le guide
