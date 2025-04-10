@@ -38,10 +38,8 @@ resource "airbyte_destination_azure_blob_storage" "my_adls_destination" {
 
     azure_blob_storage_account_key = var.azure_storage_account_key
     
-    format = {
-      format_type = "JSONL"
-      compression = "NO_COMPRESSION"
-    }
+    format_type = "JSONL"
+    compression_codec = "NO_COMPRESSION"
     
     file_name_pattern = "{date}-{hour}-{minute}-{second}-{epoch}-{random}-{namespace}"
     blob_path_prefix = "airbyte/faker-data"
