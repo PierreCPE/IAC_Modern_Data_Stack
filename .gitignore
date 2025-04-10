@@ -1,2 +1,4 @@
 *.pyc
 /ingest/airbyte/airbyte-local-setup/data
+.env
+*.tfvars
