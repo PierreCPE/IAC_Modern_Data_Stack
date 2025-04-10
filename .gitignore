@@ -1,0 +1,4 @@
+Datalake/.terraform
+Datalake/.terraform.lock.hcl
+Datalake/terraform.tfstate
+Datalake/terraform.tfstate.backup
