@@ -40,7 +40,26 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# 5. Run terraform
+# 5. Check and install Azure Blob Storage connector in Airbyte
+echo "🔍 Checking for Azure Blob Storage connector in Airbyte..."
+AIRBYTE_POD=$(kubectl get pods -n default -l app=airbyte-server -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+
+if [ -n "$AIRBYTE_POD" ]; then
+    echo "🔧 Installing Azure Blob Storage connector in Airbyte Kubernetes..."
+    kubectl exec -n default "$AIRBYTE_POD" -- bash -c 'airbyte-cli install destination-azure-blob-storage' || true
+else
+    echo "🔍 Checking for Airbyte container..."
+    AIRBYTE_CONTAINER=$(docker ps | grep airbyte-server | awk '{print $1}')
+    
+    if [ -n "$AIRBYTE_CONTAINER" ]; then
+        echo "🔧 Installing Azure Blob Storage connector in Airbyte Docker..."
+        docker exec "$AIRBYTE_CONTAINER" bash -c 'airbyte-cli install destination-azure-blob-storage' || true
+    else
+        echo "⚠️ Could not find Airbyte server. Continuing without installing connector..."
+    fi
+fi
+
+# 6. Run terraform
 echo "🏗️ Applying Terraform configuration..."
 terraform init
 terraform apply
