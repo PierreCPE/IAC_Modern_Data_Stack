@@ -36,6 +36,11 @@ resource "azurerm_storage_account" "pi_dl" {
   is_hns_enabled           = "true"
 }
 
+output "adls_id" {
+  value     = azurerm_storage_account.pi_dl.id
+  sensitive = true
+}
+
 # Create ADLS containers 
 resource "azurerm_storage_container" "pi_fcsv" {
   name                  = "foldercsv"
@@ -43,10 +48,20 @@ resource "azurerm_storage_container" "pi_fcsv" {
   container_access_type = "private"
 }
 
+output "csv_folder_id" {
+  value     = azurerm_storage_container.pi_fcsv.id
+  sensitive = true
+}
+
 resource "azurerm_storage_container" "pi_fpqt" {
   name                  = "folderparquet"
   storage_account_name  = azurerm_storage_account.pi_dl.name
   container_access_type = "private"
+}
+
+output "pqt_folder_id" {
+  value     = azurerm_storage_container.pi_fpqt.id
+  sensitive = true
 }
 
 # Create Data factory
