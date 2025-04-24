@@ -2,3 +2,10 @@
 /ingest/airbyte/airbyte-local-setup/data
 .env
 *.tfvars
+.terraform
+.terraform.lock.hcl
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log

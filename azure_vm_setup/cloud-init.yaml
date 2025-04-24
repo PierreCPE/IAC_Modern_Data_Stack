@@ -1,0 +1,80 @@
+#cloud-config
+# This cloud-init configuration file is used to set up an Azure VM with the necessary dependencies for Airbyte deployment.
+# It installs Docker, kubectl, Terraform, and the Airbyte CLI, and sets up a virtual environment for Python.
+# It also creates a script to deploy Airbyte using Terraform and Azure Storage.
+# The script is designed to be run by the azureuser after the VM is created.
+# The script will set up the necessary environment variables and run Terraform to deploy Airbyte.
+# The script will also create a local Azurite instance for Azure Storage emulation.
+# The script will be saved in the home directory of the azureuser and will be executable.
+package_update: true
+package_upgrade: true
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+  - gnupg
+  - python3-pip
+  - python3-venv
+  - git
+  - jq
+  - docker-compose-plugin
+runcmd:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io
+  - systemctl start docker
+  - systemctl enable docker
+  - usermod -aG docker azureuser
+  - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+  - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+  - wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  - echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" > /etc/apt/sources.list.d/hashicorp.list
+  - apt-get update
+  - apt-get install -y terraform
+  - curl -LsfS https://get.airbyte.com | bash -
+  - mkdir -p /home/azureuser/airbyte-deployment
+  - chown -R azureuser:azureuser /home/azureuser/airbyte-deployment
+  - su - azureuser -c "git clone https://github.com/PierreCPE/IAC_Modern_Data_Stack.git /home/azureuser/airbyte-deployment/IAC_Modern_Data_Stack"
+  - su - azureuser -c "abctl local install --low-resource-mode"
+  - docker run -d --name azurite -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite
+  - su - azureuser -c "python3 -m venv /home/azureuser/airbyte-deployment/venv"
+  - su - azureuser -c "/home/azureuser/airbyte-deployment/venv/bin/pip install azure-storage-blob"
+write_files:
+  - path: /home/azureuser/airbyte-deployment/deploy.sh
+    owner: azureuser:azureuser
+    permissions: '0755'
+    content: |
+      #!/bin/bash
+      set -e
+      echo "Starting Airbyte deployment..."
+
+      CREDENTIALS=$(abctl local credentials)
+      echo "$CREDENTIALS" > ~/airbyte-credentials.txt
+      CLIENT_ID=$(echo "$CREDENTIALS" | grep "Client-Id:" | awk '{print $2}')
+      CLIENT_SECRET=$(echo "$CREDENTIALS" | grep "Client-Secret:" | awk '{print $2}')
+
+      WORKSPACE_ID=$(curl -s -X GET "http://localhost:8000/api/public/v1/workspaces" \
+        -H "Authorization: Basic $(echo -n ${CLIENT_ID}:${CLIENT_SECRET} | base64)" \
+        | jq -r '.data[0].workspaceId')
+
+      echo "Workspace ID: $WORKSPACE_ID"
+
+      cd ~/airbyte-deployment/IAC_Modern_Data_Stack/IAC_Modern_Data_Stack/ingest/airbyte/terraform-airbyte-ingestion
+      source ~/airbyte-deployment/venv/bin/activate
+
+      cat > .env << EOL
+      TF_VAR_client_id="${CLIENT_ID}"
+      TF_VAR_client_secret="${CLIENT_SECRET}"
+      TF_VAR_workspace_id="${WORKSPACE_ID}"
+      TF_VAR_azure_storage_account_name="devstoreaccount1"
+      TF_VAR_azure_container_name="airbytedata"
+      TF_VAR_azure_storage_account_key="Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
+      EOL
+
+      terraform init
+      terraform apply -auto-approve
+      echo "Deployment complete! Airbyte is running at http://localhost:8000"
+
+final_message: "Cloud-init config complete. Log in to the VM and run 'bash ~/airbyte-deployment/deploy.sh' as azureuser if needed."

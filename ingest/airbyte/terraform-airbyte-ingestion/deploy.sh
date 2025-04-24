@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 
+# This script automates the deployment of Airbyte and Azurite for Azure Blob Storage ingestion.
+# It checks for the necessary environment, installs required packages, initializes the storage container,
+# and installs the Azure Blob Storage connector in Airbyte.
+# It also applies the Terraform configuration to set up the necessary infrastructure.
+# Usage: ./deploy.sh
+
 # Go to the project root directory
 cd "$(dirname "$0")"
 
