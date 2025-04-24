@@ -9,3 +9,5 @@
 *.tfstate.*
 crash.log
 crash.*.log
+/ingest/airbyte/terraform-airbyte-ingestion/terraform.tfstate
+/ingest/airbyte/terraform-airbyte-ingestion/.terraform
