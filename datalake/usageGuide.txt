@@ -1,0 +1,17 @@
+Requirements : Terraform installed locally, Azure CLI installed.
+
+1. Open cmd in folder containing Terraform file azureDeployment.tf 
+
+2. If not previously done, run "terraform init" (files are large and will be ignored by git)
+
+3. Run "az login" and select the subscription on which to deploy infrastructure
+
+4. Run "terraform apply" 
+
+5. In Azure web portal, upload csv files in datalake foldercsv container (may cost credits)
+
+6. Still in portal, open data factory studio and manually trigger convertcsvtoparquet pipeline (will cost credits)
+
+7. (optional) Download parquet files from datalake folderparquet container 
+
+8. (optional) Run "terraform destroy" to delete all components 
