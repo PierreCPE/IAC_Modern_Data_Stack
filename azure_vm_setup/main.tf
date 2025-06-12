@@ -37,12 +37,21 @@ resource "azurerm_subnet" "main" {
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# Public IP for the VM
+# Public IP for the VM (cost money, few cents per month)
+# resource "azurerm_public_ip" "main" {
+#   name                = "ip-airbyte"
+#   location            = azurerm_resource_group.main.location
+#   resource_group_name = azurerm_resource_group.main.name
+#   allocation_method   = "Static"
+# }
+
+# OR dynamic public IP (free)
+
 resource "azurerm_public_ip" "main" {
   name                = "ip-airbyte"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  allocation_method   = "Static"
+  allocation_method   = "Dynamic"
 }
 
 # Network security group for the VM
@@ -133,7 +142,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
-    disk_size_gb         = 64
+    disk_size_gb         = 30
   }
 
   source_image_reference {
