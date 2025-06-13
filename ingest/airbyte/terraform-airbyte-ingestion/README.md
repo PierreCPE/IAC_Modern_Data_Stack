@@ -1,6 +1,7 @@
 # Terraform Airbyte Ingestion
 
 This project demonstrates how to automate data ingestion using Airbyte with Terraform. It creates a data pipeline from a Faker source to an Azure Blob Storage destination (using Azurite for local development).
+WIP !! : The project also tries to pull from GCS to put in zurite to fit the use case projet tremplin
 
 ## Overview
 

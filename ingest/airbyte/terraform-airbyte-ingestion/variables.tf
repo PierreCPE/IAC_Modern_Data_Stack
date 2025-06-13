@@ -36,3 +36,15 @@ variable "azure_storage_account_key" {
   sensitive   = true
   default     = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
 }
+
+variable "gcs_bucket_name" {
+  type        = string
+  description = "GCS bucket name containing CSV files"
+  default     = "your-gcs-bucket-name"
+}
+
+variable "gcs_service_account_key" {
+  type        = string
+  description = "GCS service account key JSON"
+  sensitive   = true
+}

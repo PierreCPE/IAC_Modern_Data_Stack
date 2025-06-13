@@ -63,3 +63,38 @@ resource "airbyte_connection" "faker_to_adls" {
     schedule_type = "manual"
   }
 }
+
+
+# Nouvelle source GCS pour le use case
+
+resource "airbyte_source_custom" "gcs_source" {
+  name         = "GCS CSV Source"
+  workspace_id = var.workspace_id
+
+  configuration = <<-EOF
+    {
+      "sourceType": "gcs",
+      "bucket": "${var.gcs_bucket_name}",
+      "service_account_key": "${var.gcs_service_account_key}",
+      "path_pattern": "**/*.csv",
+      "format": {
+        "filetype": "csv"
+      }
+    }
+  EOF
+}
+
+
+# Connexion GCS vers ADLS existant
+resource "airbyte_connection" "gcs_to_azurite" {
+  name           = "GCS to Azurite"
+  source_id      = airbyte_source_custom.gcs_source.source_id
+  destination_id = airbyte_destination_custom.my_adls_destination.destination_id
+
+  namespace_definition = "source"
+  namespace_format     = "GCS_${airbyte_destination_custom.my_adls_destination.name}"
+
+  schedule = {
+    schedule_type = "manual"
+  }
+}

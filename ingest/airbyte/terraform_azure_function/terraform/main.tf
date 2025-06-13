@@ -76,7 +76,7 @@ resource "azurerm_linux_function_app" "function" {
   }
 }
 
-# Application Insights for monitoring (free tier includes some monitoring)
+# Application Insights for monitoring (free tier includes some monitoring) a potentiellement enlevé si ca coute de l'argent
 resource "azurerm_application_insights" "insights" {
   name                = "${var.function_app_name}-insights"
   resource_group_name = azurerm_resource_group.rg.name
