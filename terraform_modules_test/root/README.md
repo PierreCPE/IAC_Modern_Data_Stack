@@ -1,8 +1,8 @@
-# Module Terraform : Modern Data Stack avec Airbyte
+# Module Terraform : Modern Data Stack - Pipeline Faker vers ADLS
 
 ## Architecture
 
-Ce module Terraform déploie un **Modern Data Stack** complet avec :
+Ce module Terraform déploie un **Modern Data Stack** complet avec pipeline d'ingestion **Faker → ADLS** basé sur la logique validée du test WSL.
 
 ### **Infrastructure Azure**
 - **Resource Group** : `ModernDataStack`
@@ -10,21 +10,25 @@ Ce module Terraform déploie un **Modern Data Stack** complet avec :
 - **Containers** : `foldercsv`, `folderparquet`, `rootmoduletest`
 - **Data Factory** : `pimdsdatafactory` avec pipeline CSV → Parquet
 
-### **Ingestion Airbyte OSS**
-- **Source Faker** : Génération de données de test
-- **Source GCS** : Import de fichiers CSV depuis Google Cloud Storage (optionnel)
-- **Destination Azure** : Export vers ADLS Gen2 en format Parquet
-- **Connexions** : Pipelines automatisés avec scheduling
+### **Pipeline d'Ingestion Airbyte OSS**
+- **Source Faker** : Génération de 1000 enregistrements de données de test (users, products, purchases)
+- **Destination Azure** : Export vers ADLS Gen2 en format CSV
+- **Connexion** : Pipeline automatisé Faker → ADLS avec namespace "production_data"
+- **Configurabilité** : Support GCS optionnel pour compatibilité
 
 ## Prérequis
 
 ### **1. Airbyte OSS Local**
 ```bash
+# Option 1: Via Git Clone
 git clone https://github.com/airbytehq/airbyte.git
 cd airbyte
 ./run-ab-platform.sh
+
+# Option 2: Via Docker Compose (dans ce projet)
+docker-compose up -d
 ```
-Airbyte sera accessible sur http://localhost:8000
+Airbyte sera accessible sur http://localhost:8000 (airbyte/password)
 
 ### **2. Azure CLI**
 ```bash
@@ -42,7 +46,15 @@ az login
 
 ## Utilisation
 
-### **Déploiement simple (sans GCS)**
+### **Déploiement rapide**
+
+#### **Windows PowerShell**
+```powershell
+cd terraform_modules_test/root
+.\deploy.ps1
+```
+
+#### **Linux/WSL/Bash**
 ```bash
 cd terraform_modules_test/root
 chmod +x deploy.sh

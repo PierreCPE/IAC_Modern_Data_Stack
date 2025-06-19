@@ -84,7 +84,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         terraform output
         echo ""
         echo "🌐 Interface Airbyte: $AIRBYTE_URL"
-        echo "🔑 Login: airbyte / password"
+        echo "🔑 Login: admin.admin@admin.com / password"
         echo "🔄 Connection: WSL Faker to ADLS"
     fi
 else
