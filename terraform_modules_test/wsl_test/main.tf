@@ -71,8 +71,9 @@ resource "airbyte_destination_azure_blob_storage" "wsl_adls" {
     azure_blob_storage_endpoint_domain_name = "blob.core.windows.net"
     
     format = {
-      format_type = "CSV"
-      flattening  = "Root level flattening"
+      csv_comma_separated_values = {
+        flattening = "Root level flattening"
+      }
     }
   }
 
