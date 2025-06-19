@@ -3,10 +3,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 3.0.2"    }
+      version = "~> 3.0.2"
+    }
     airbyte = {
       source  = "airbytehq/airbyte"
-      version = "0.5.1"  # Version spécifique plus stable
+      version = "0.6.0"  # Version spécifique existante
     }
   }
 

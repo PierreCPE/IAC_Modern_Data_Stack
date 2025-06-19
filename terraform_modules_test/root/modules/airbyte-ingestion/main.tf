@@ -3,10 +3,9 @@
 
 # Configure the Airbyte provider
 terraform {
-  required_providers {
-    airbyte = {
+  required_providers {    airbyte = {
       source  = "airbytehq/airbyte"
-      version = "0.5.1"  # Aligné avec le main.tf principal
+      version = "0.6.0"  # Aligné avec le main.tf principal
     }
   }
 }
