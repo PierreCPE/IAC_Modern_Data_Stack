@@ -39,8 +39,8 @@ module "order-test" {
 
 # Create ADLS container
 resource "azurerm_storage_container" "pi_mod_test" {
-  name                 = "rootmoduletest"
-  storage_account_id   = module.order-test.adls_id
+  name                  = "rootmoduletest"
+  storage_account_name  = module.order-test.adls_name
   container_access_type = "private"
 }
 
