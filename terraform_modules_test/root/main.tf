@@ -44,7 +44,7 @@ resource "azurerm_storage_container" "pi_mod_test" {
   container_access_type = "private"
 }
 
-# Module d'ingestion Airbyte (adapté du test WSL validé)
+# Module d'ingestion Airbyte
 module "airbyte-ingestion" {
   source = "./modules/airbyte-ingestion"
   
@@ -136,7 +136,7 @@ output "storage_info" {
   description = "Informations du stockage ADLS"
   value = {
     storage_account_name = module.order-test.adls_name
-    resource_group      = module.order-test.resource_group_name
+    resource_group      = "ModernDataStack"  # Nom défini en dur dans le sous-module
     container          = azurerm_storage_container.pi_mod_test.name
   }
 }
