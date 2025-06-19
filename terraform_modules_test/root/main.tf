@@ -19,10 +19,10 @@ provider "azurerm" {
 }
 
 provider "airbyte" {
-  # Configuration pour Airbyte OSS local
-  server_url   = "http://localhost:8000"
-  username     = "airbyte"
-  password     = "password"
+  # Configuration pour Airbyte OSS - flexible avec variables
+  server_url = var.airbyte_server_url
+  username   = "airbyte"
+  password   = "password"
 }
 
 
