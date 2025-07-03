@@ -30,10 +30,30 @@ resource "airbyte_source_azure_blob_storage" "source_blob" {
   workspace_id = var.workspace_id
 
   configuration = {
-    azure_blob_storage_account_name      = local.connection_parts.account_name
-    azure_blob_storage_account_key       = local.connection_parts.account_key
-    azure_blob_storage_container_name    = var.source_container_name
+    azure_blob_storage_account_name         = local.connection_parts.account_name
+    azure_blob_storage_container_name       = var.source_container_name
     azure_blob_storage_endpoint_domain_name = "blob.core.windows.net"
+    
+    # Configuration des credentials obligatoire
+    credentials = {
+      azure_blob_storage_account_key = local.connection_parts.account_key
+    }
+    
+    # Configuration des streams obligatoire
+    streams = [
+      {
+        name = "**"  # Tous les fichiers du container
+        format = {
+          filetype = "csv"
+          delimiter = ","
+          quote_char = "\""
+          escape_char = "\""
+          encoding = "utf8"
+          double_quote = true
+          newlines_in_values = false
+        }
+      }
+    ]
   }
 }
 
@@ -43,14 +63,22 @@ resource "airbyte_destination_azure_blob_storage" "raw_adls" {
   workspace_id = var.workspace_id
 
   configuration = {
-    azure_blob_storage_account_name      = local.connection_parts.account_name
-    azure_blob_storage_account_key       = local.connection_parts.account_key
-    azure_blob_storage_container_name    = var.raw_container_name
+    azure_blob_storage_account_name         = local.connection_parts.account_name
+    azure_blob_storage_container_name       = var.raw_container_name
     azure_blob_storage_endpoint_domain_name = "blob.core.windows.net"
     
+    # Configuration des credentials obligatoire
+    credentials = {
+      azure_blob_storage_account_key = local.connection_parts.account_key
+    }
+    
+    # Format de sortie corrigé
     format = {
       csv_comma_separated_values = {
         flattening = "Root level flattening"
+        compression = {
+          compression_type = "No Compression"
+        }
       }
     }
   }
@@ -68,8 +96,9 @@ resource "airbyte_connection" "source_to_raw" {
   configurations = {
     streams = [
       {
-        name      = "files"  # Stream par défaut pour Azure Blob Storage
-        sync_mode = "full_refresh_overwrite"
+        name = "**"  # Correspond au stream configuré dans la source
+        sync_mode = "full_refresh"
+        destination_sync_mode = "overwrite"
       }
     ]
   }
