@@ -1,18 +1,41 @@
-# Variables du module Airbyte Ingestion - Pipeline Faker vers ADLS
+# Variables du module Airbyte Ingestion - Pipeline Azure Blob vers ADLS
 
-variable "storage_account_name" {
-  description = "Nom du storage account Azure créé par le module azure-datalake"
-  type        = string
-}
-
-variable "storage_account_key" {
-  description = "Clé du storage account Azure"
+# Configuration du stockage Azure via connection string (sécurisé)
+variable "azure_connection_string" {
+  description = "Connection string Azure pour accéder au stockage de l'entreprise"
   type        = string
   sensitive   = true
 }
 
+# Alternative : configuration traditionnelle (optionnelle, pour rétrocompatibilité)
+variable "storage_account_name" {
+  description = "Nom du storage account Azure (optionnel si connection_string fournie)"
+  type        = string
+  default     = ""
+}
+
+variable "storage_account_key" {
+  description = "Clé du storage account Azure (optionnel si connection_string fournie)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+# Configuration des containers pour le pipeline
+variable "source_container_name" {
+  description = "Nom du container source (source-test)"
+  type        = string
+  default     = "source-test"
+}
+
+variable "raw_container_name" {
+  description = "Nom du container pour les données raw après Airbyte"
+  type        = string
+  default     = "raw-data"
+}
+
 variable "csv_container_name" {
-  description = "Nom du container pour les fichiers CSV"
+  description = "Nom du container pour les fichiers CSV (pour rétrocompatibilité)"
   type        = string
   default     = "foldercsv"
 }
@@ -20,7 +43,7 @@ variable "csv_container_name" {
 variable "parquet_container_name" {
   description = "Nom du container pour les fichiers Parquet" 
   type        = string
-  default     = "folderparquet"
+  default     = "parquet"
 }
 
 variable "workspace_id" {

@@ -26,46 +26,48 @@ provider "airbyte" {
 }
 
 
+# Création du stockage Azure commentée - utilisation du stockage de l'entreprise
 #module "azure-datalake" {
 #  source = "./modules/order-test/submodules/azure-datalake"
-#
 #}
 
-module "order-test" {
-  source = "./modules/order-test"
+#module "order-test" {
+#  source = "./modules/order-test"
+#}
 
-}
+# Container ADLS commenté - utilisation du stockage de l'entreprise
+#resource "azurerm_storage_container" "pi_mod_test" {
+#  name                  = "rootmoduletest"
+#  storage_account_name  = module.order-test.adls_name
+#  container_access_type = "private"
+#}
 
-
-# Create ADLS container
-resource "azurerm_storage_container" "pi_mod_test" {
-  name                  = "rootmoduletest"
-  storage_account_name  = module.order-test.adls_name
-  container_access_type = "private"
-}
-
-# Module d'ingestion Airbyte
+# Module d'ingestion Airbyte - Pipeline utilisant le stockage de l'entreprise
 module "airbyte-ingestion" {
   source = "./modules/airbyte-ingestion"
   
-  # Dépendances : utilise les outputs du module de stockage
-  storage_account_name = module.order-test.adls_name
-  storage_account_key  = module.order-test.adls_primary_access_key
+  # Configuration du stockage de l'entreprise via variables d'environnement
+  azure_connection_string = var.azure_connection_string
   
-  # Configuration des containers
-  csv_container_name     = "foldercsv"
-  parquet_container_name = "folderparquet"
+  # Configuration des containers pour le pipeline
+  source_container_name = "source-test"    # Container source
+  raw_container_name    = "raw-data"       # Container raw après Airbyte
+  parquet_container_name = "parquet"       # Container final parquet
   
   # Configuration Airbyte
   workspace_id      = var.workspace_id
   airbyte_server_url = var.airbyte_server_url
   
-  # Configuration GCS optionnelle (pour compatibilité)
-  gcs_bucket_name          = var.gcs_bucket_name
-  gcs_service_account_key  = var.gcs_service_account_key
-  
-  # Le module Airbyte attend que le stockage soit créé
-  depends_on = [module.order-test]
+  # Pas de dépendance sur le module de stockage car utilisation du stockage existant
+}
+
+# Variables pour la configuration Azure Blob Storage de l'entreprise
+variable "azure_connection_string" {
+  description = "Connection string pour le stockage Azure de l'entreprise"
+  type        = string
+  sensitive   = true
+  # Cette variable doit être définie via une variable d'environnement :
+  # export TF_VAR_azure_connection_string="DefaultEndpointsProtocol=https;AccountName=...;AccountKey=...;EndpointSuffix=core.windows.net"
 }
 
 # Variables pour la configuration Airbyte
@@ -96,18 +98,18 @@ variable "gcs_service_account_key" {
 }
 
 # Outputs pour exposer les informations du pipeline d'ingestion
-output "airbyte_faker_source_id" {
-  description = "ID de la source Faker Airbyte"
-  value       = module.airbyte-ingestion.faker_source_id
+output "airbyte_source_blob_id" {
+  description = "ID de la source Azure Blob Airbyte"
+  value       = module.airbyte-ingestion.source_blob_id
 }
 
 output "airbyte_azure_destination_id" {
-  description = "ID de la destination Azure Airbyte"
+  description = "ID de la destination Azure Raw Airbyte"
   value       = module.airbyte-ingestion.azure_destination_id
 }
 
 output "airbyte_connection_id" {
-  description = "ID de la connexion principale Faker vers ADLS"
+  description = "ID de la connexion principale Blob Source vers Raw Data"
   value       = module.airbyte-ingestion.main_connection_id
 }
 
@@ -116,27 +118,33 @@ output "connection_info" {
   value       = module.airbyte-ingestion.connection_info
 }
 
+output "pipeline_info" {
+  description = "Informations complètes du pipeline"
+  value       = module.airbyte-ingestion.pipeline_info
+}
+
 output "deployment_info" {
   description = "Informations complètes du déploiement"
   value = {
-    storage_account = module.order-test.adls_name
-    container      = "foldercsv"
     airbyte_url    = var.airbyte_server_url
+    pipeline_stage = "Stage 1: Azure Blob → Raw Data (Airbyte)"
     next_steps = [
       "1. Ouvrir ${var.airbyte_server_url}",
-      "2. Login: airbyte / password",
-      "3. Connections → 'Production Faker to ADLS'",
+      "2. Login: airbyte / password", 
+      "3. Connections → 'Enterprise Blob to Raw Data'",
       "4. Cliquer 'Sync now'",
-      "5. Vérifier Azure Portal → ModernDataStack → ${module.order-test.adls_name} → foldercsv"
+      "5. Vérifier container 'raw-data' dans Azure Portal",
+      "6. Prochaine étape: Configurer Azure Function (raw-data → parquet)"
     ]
   }
 }
 
-output "storage_info" {
-  description = "Informations du stockage ADLS"
-  value = {
-    storage_account_name = module.order-test.adls_name
-    resource_group      = "ModernDataStack"  # Nom défini en dur dans le sous-module
-    container          = azurerm_storage_container.pi_mod_test.name
-  }
-}
+# Informations du stockage Azure (commentées car utilisation du stockage de l'entreprise)
+# output "storage_info" {
+#   description = "Informations du stockage ADLS"
+#   value = {
+#     storage_account_name = module.order-test.adls_name
+#     resource_group      = "ModernDataStack"
+#     container          = azurerm_storage_container.pi_mod_test.name
+#   }
+# }

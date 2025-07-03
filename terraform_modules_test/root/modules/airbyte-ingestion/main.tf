@@ -1,4 +1,5 @@
-# Module Airbyte Ingestion - Pipeline Faker vers ADLS
+# Module Airbyte Ingestion - Pipeline Azure Blob Source vers ADLS Raw
+# Pipeline: [Azure Blob: source-test] --> (Airbyte) --> [Azure Blob: raw-data]
 # Basé sur la logique validée du test WSL
 
 # Configure the Airbyte provider
@@ -6,35 +7,45 @@ terraform {
   required_providers {    
     airbyte = {
       source  = "airbytehq/airbyte"
-      version = "0.6.0"  # Aligné avec le main.tf principal
+      version = "0.6.0"
     }
   }
 }
 
-# Source Faker principale pour ingestion
-resource "airbyte_source_faker" "main_faker" {
-  name         = "Production Faker Source"
-  workspace_id = var.workspace_id
-
-  configuration = {
-    count                = 1000      # Plus de données pour la prod
-    seed                 = 42
-    records_per_slice    = 100
-    records_per_sync     = 1000
-    always_updated       = false
-    parallelism          = 4         # Plus de parallélisme pour la prod
+# Extraction des informations de la connection string pour les configurations
+locals {
+  # Parse de la connection string pour extraire les informations nécessaires
+  connection_parts = var.azure_connection_string != "" ? {
+    account_name = regex("AccountName=([^;]+)", var.azure_connection_string)[0]
+    account_key  = regex("AccountKey=([^;]+)", var.azure_connection_string)[0]
+  } : {
+    account_name = var.storage_account_name
+    account_key  = var.storage_account_key
   }
 }
 
-# Destination ADLS principale
-resource "airbyte_destination_azure_blob_storage" "main_adls" {
-  name         = "Production ADLS Destination"
+# Source Azure Blob Storage (container source-test)
+resource "airbyte_source_azure_blob_storage" "source_blob" {
+  name         = "Enterprise Azure Blob Source"
   workspace_id = var.workspace_id
 
   configuration = {
-    azure_blob_storage_account_name      = var.storage_account_name
-    azure_blob_storage_account_key       = var.storage_account_key
-    azure_blob_storage_container_name    = var.csv_container_name
+    azure_blob_storage_account_name      = local.connection_parts.account_name
+    azure_blob_storage_account_key       = local.connection_parts.account_key
+    azure_blob_storage_container_name    = var.source_container_name
+    azure_blob_storage_endpoint_domain_name = "blob.core.windows.net"
+  }
+}
+
+# Destination ADLS pour les données raw
+resource "airbyte_destination_azure_blob_storage" "raw_adls" {
+  name         = "Enterprise ADLS Raw Destination"
+  workspace_id = var.workspace_id
+
+  configuration = {
+    azure_blob_storage_account_name      = local.connection_parts.account_name
+    azure_blob_storage_account_key       = local.connection_parts.account_key
+    azure_blob_storage_container_name    = var.raw_container_name
     azure_blob_storage_endpoint_domain_name = "blob.core.windows.net"
     
     format = {
@@ -45,27 +56,19 @@ resource "airbyte_destination_azure_blob_storage" "main_adls" {
   }
 }
 
-# Connexion principale Faker → ADLS
-resource "airbyte_connection" "main_faker_to_adls" {
-  name           = "Production Faker to ADLS"
-  source_id      = airbyte_source_faker.main_faker.source_id
-  destination_id = airbyte_destination_azure_blob_storage.main_adls.destination_id
+# Connexion principale Azure Blob Source → ADLS Raw
+resource "airbyte_connection" "source_to_raw" {
+  name           = "Enterprise Blob to Raw Data"
+  source_id      = airbyte_source_azure_blob_storage.source_blob.source_id
+  destination_id = airbyte_destination_azure_blob_storage.raw_adls.destination_id
 
   namespace_definition = "source"
-  namespace_format     = "production_data"
+  namespace_format     = "raw_data"
 
   configurations = {
     streams = [
       {
-        name      = "users"
-        sync_mode = "full_refresh_overwrite"
-      },
-      {
-        name      = "products"
-        sync_mode = "full_refresh_overwrite"
-      },
-      {
-        name      = "purchases"
+        name      = "files"  # Stream par défaut pour Azure Blob Storage
         sync_mode = "full_refresh_overwrite"
       }
     ]
@@ -76,7 +79,22 @@ resource "airbyte_connection" "main_faker_to_adls" {
   }
 
   depends_on = [
-    airbyte_source_faker.main_faker,
-    airbyte_destination_azure_blob_storage.main_adls
+    airbyte_source_azure_blob_storage.source_blob,
+    airbyte_destination_azure_blob_storage.raw_adls
   ]
 }
+
+# Source Faker de test (commentée, gardée pour référence)
+# resource "airbyte_source_faker" "test_faker" {
+#   name         = "Test Faker Source"
+#   workspace_id = var.workspace_id
+#
+#   configuration = {
+#     count                = 100
+#     seed                 = 42
+#     records_per_slice    = 10
+#     records_per_sync     = 100
+#     always_updated       = false
+#     parallelism          = 1
+#   }
+# }
