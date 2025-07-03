@@ -2,10 +2,6 @@
 
 # Configuration du stockage Azure via connection string (sécurisé)
 
-variable "workspace_id" {
-  description = "ID du workspace Airbyte"
-  type        = string
-}
 variable "azure_connection_string" {
   description = "Connection string Azure pour accéder au stockage de l'entreprise"
   type        = string
