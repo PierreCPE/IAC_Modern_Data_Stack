@@ -36,7 +36,9 @@ resource "airbyte_source_azure_blob_storage" "source_blob" {
     
     # Configuration des credentials obligatoire
     credentials = {
-      azure_blob_storage_account_key = local.connection_parts.account_key
+      authenticate_via_storage_account_key = {
+        azure_blob_storage_account_key = local.connection_parts.account_key
+      }
     }
     
     # Configuration des streams obligatoire
@@ -44,13 +46,14 @@ resource "airbyte_source_azure_blob_storage" "source_blob" {
       {
         name = "**"  # Tous les fichiers du container
         format = {
-          filetype = "csv"
-          delimiter = ","
-          quote_char = "\""
-          escape_char = "\""
-          encoding = "utf8"
-          double_quote = true
-          newlines_in_values = false
+          csv_format = {
+            delimiter = ","
+            quote_char = "\""
+            escape_char = "\""
+            encoding = "utf8"
+            double_quote = true
+            newlines_in_values = false
+          }
         }
       }
     ]
@@ -64,6 +67,7 @@ resource "airbyte_destination_azure_blob_storage" "raw_adls" {
 
   configuration = {
     azure_blob_storage_account_name         = local.connection_parts.account_name
+    azure_blob_storage_account_key          = local.connection_parts.account_key
     azure_blob_storage_container_name       = var.raw_container_name
     azure_blob_storage_endpoint_domain_name = "blob.core.windows.net"
     
