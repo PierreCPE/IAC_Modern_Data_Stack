@@ -21,8 +21,8 @@ provider "azurerm" {
 provider "airbyte" {
   # Configuration pour Airbyte OSS - flexible avec variables
   server_url = var.airbyte_server_url
-  username   = "admin.admin@admin.com"
-  password   = "password"
+  # username   = "admin.admin@admin.com"
+  # password   = "password"
 }
 
 
