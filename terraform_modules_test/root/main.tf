@@ -7,7 +7,7 @@ terraform {
     }
     airbyte = {
       source  = "airbytehq/airbyte"
-      version = "0.6.0"  # Version spécifique existante
+      version = "0.6.0"
     }
   }
 
@@ -21,6 +21,8 @@ provider "azurerm" {
 provider "airbyte" {
   # Configuration pour Airbyte OSS - flexible avec variables
   server_url = var.airbyte_server_url
+  client_id     = "73fbea79-0b03-45da-bba0-2811a8561ac0"
+  client_secret = "ffViJI9yevjxoyIa2Zq1AXAiJh78CCAP"
   # username   = "admin.admin@admin.com"
   # password   = "password"
 }
