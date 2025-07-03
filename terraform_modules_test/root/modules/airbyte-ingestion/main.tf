@@ -101,8 +101,7 @@ resource "airbyte_connection" "source_to_raw" {
     streams = [
       {
         name = "**"  # Correspond au stream configuré dans la source
-        sync_mode = "full_refresh"
-        destination_sync_mode = "overwrite"
+        sync_mode = "full_refresh_overwrite"
       }
     ]
   }
