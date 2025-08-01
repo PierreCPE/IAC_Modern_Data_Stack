@@ -1,4 +1,4 @@
-# Configure the Azure provider
+# Configuration du Azure provider
 terraform {
   required_providers {
     azurerm = {
@@ -15,17 +15,16 @@ provider "azurerm" {
 }
 
 
-# Create resource group
+# Création du groupe de ressources
+# Ceci est le groupe de ressources où le Data Lake et Data Factory seront déployés
 resource "azurerm_resource_group" "pi_rg" {
   name     = "ModernDataStack"
   location = "francecentral"
 }
 
 
-# Create VMs
-# to do
-
-# Create ADLS
+# Création du Data Lake
+# Ceci déploie le Data Lake dans le groupe de ressources et à sa même localisation
 resource "azurerm_storage_account" "pi_dl" {
   name                     = "pimdsdatalake"
   resource_group_name      = azurerm_resource_group.pi_rg.name
@@ -36,52 +35,55 @@ resource "azurerm_storage_account" "pi_dl" {
   is_hns_enabled           = "true"
 }
 
+# Envoie l'id du Data Lake en sortie pour être utilisé dans les modules dépendants
 output "adls_id" {
   value     = azurerm_storage_account.pi_dl.id
   sensitive = true
 }
 
+# Envoie le nom du Data Lake en sortie pour être utilisé dans les modules dépendants
 output "adls_name" {
   value     = azurerm_storage_account.pi_dl.name
   sensitive = true
 }
 
-output "adls_primary_access_key" {
-  value     = azurerm_storage_account.pi_dl.primary_access_key
-  sensitive = true
-}
-
-# Create ADLS containers 
+# Création des conteneurs du Data Lake
+# Ceci est le conteneur pour les fichiers CSV
 resource "azurerm_storage_container" "pi_fcsv" {
   name                  = "foldercsv"
   storage_account_name  = azurerm_storage_account.pi_dl.name
   container_access_type = "private"
 }
 
+# Envoie l'id du conteneur CSV en sortie pour être utilisé dans les modules dépendants
 output "csv_folder_id" {
   value     = azurerm_storage_container.pi_fcsv.id
   sensitive = true
 }
 
+# Ceci est le conteneur pour les fichiers Parquet après la conversion
 resource "azurerm_storage_container" "pi_fpqt" {
   name                  = "folderparquet"
   storage_account_name  = azurerm_storage_account.pi_dl.name
   container_access_type = "private"
 }
 
+# Envoie l'id du conteneur Parquet en sortie pour être utilisé dans les modules dépendants
 output "pqt_folder_id" {
   value     = azurerm_storage_container.pi_fpqt.id
   sensitive = true
 }
 
-# Create Data factory
+# Création de la Data Factory
+# Déploie la Data Factory pour faire la conversion des fichiers CSV en Parquet
 resource "azurerm_data_factory" "pi_df" {
   name                = "pimdsdatafactory"
   location            = azurerm_resource_group.pi_rg.location
   resource_group_name = azurerm_resource_group.pi_rg.name
 }
 
-# Create Data factory datalake linked service
+# Création du linked service de la Data Factory
+# Ceci crée le lien entre la Data Factory et le Data Lake
 resource "azurerm_data_factory_linked_service_data_lake_storage_gen2" "df_ls_dl" {
   name                = "AzureDataLakeStorageMDS"
   data_factory_id     = azurerm_data_factory.pi_df.id
@@ -89,7 +91,8 @@ resource "azurerm_data_factory_linked_service_data_lake_storage_gen2" "df_ls_dl"
   url                 = "https://pimdsdatalake.dfs.core.windows.net/"
 }
 
-# Create data factory datasets
+# Création des datasets de la Data Factory
+# Ceci permet à la Data Factory d'accéder au conteneur CSV du Data Lake
 resource "azurerm_data_factory_dataset_delimited_text" "df_ds_csv" {
   name                = "SourceDataset_CSV"
   data_factory_id     = azurerm_data_factory.pi_df.id
@@ -107,6 +110,7 @@ resource "azurerm_data_factory_dataset_delimited_text" "df_ds_csv" {
   first_row_as_header = true
 }
 
+# Ceci permet à la Data Factory d'accéder au conteneur Parquet du Data Lake
 resource "azurerm_data_factory_dataset_parquet" "df_ds_pqt" {
   name                = "DestinationDataset_Parquet"
   data_factory_id     = azurerm_data_factory.pi_df.id
@@ -119,14 +123,18 @@ resource "azurerm_data_factory_dataset_parquet" "df_ds_pqt" {
   compression_codec = "gzip"
 }
 
-# Time for correct pipeline deletion
+# Temps d'attente de la suppression de la pipeline
+# Cette ressource ne déploie rien, mais cause un temps d'attente avant de supprimer la pipeline
+# Sans cette ressource, terraform destroy échouera car la pipeline sera supprimée avant d'autres ressources qui en dépendent
 resource "time_sleep" "wait_pipeline_deletion" {
   depends_on = [azurerm_data_factory_dataset_delimited_text.df_ds_csv, azurerm_data_factory_dataset_parquet.df_ds_pqt]
 
   destroy_duration = "5s"
 }
 
-# Create Copy to parquet job
+# Création du job de conversion de CSV en Parquet
+# Ceci déploie une pipeline avec une activité de Copie en Parquet.
+# Lorsque déclenchée, cette pipeline copie tous les fichiers dans le conteneur CSV dans le conteneur Parquet en faisant la conversion.
 resource "azurerm_data_factory_pipeline" "pi_job" {
   name            = "convertcsvtoparquet"
   data_factory_id = azurerm_data_factory.pi_df.id
