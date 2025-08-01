@@ -46,6 +46,11 @@ output "adls_name" {
   sensitive = true
 }
 
+output "adls_primary_access_key" {
+  value     = azurerm_storage_account.pi_dl.primary_access_key
+  sensitive = true
+}
+
 # Create ADLS containers 
 resource "azurerm_storage_container" "pi_fcsv" {
   name                  = "foldercsv"

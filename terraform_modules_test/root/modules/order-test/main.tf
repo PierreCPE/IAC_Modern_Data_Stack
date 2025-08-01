@@ -31,3 +31,8 @@ output "adls_name" {
   value     = module.azure-datalake.adls_name
   sensitive = true
 }
+
+output "adls_primary_access_key" {
+  value     = module.azure-datalake.adls_primary_access_key
+  sensitive = true
+}

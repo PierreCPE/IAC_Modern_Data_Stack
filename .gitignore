@@ -1,4 +1,19 @@
+# Terraform
 .terraform
 terraform.tfstate
 terraform.tfstate.backup
 .terraform.lock.hcl
+*.tfplan
+
+# Variables d'environnement et secrets
+.env
+terraform.tfvars
+*.tfvars
+*.auto.tfvars
+secrets.tf
+
+# Azure credentials
+.azure/
+
+# Logs
+*.log
